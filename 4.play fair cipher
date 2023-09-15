@@ -1,95 +1,88 @@
 #include <stdio.h>
 #include <string.h>
-#define SIZE 5
-void prepareKey(char *key, char matrix[SIZE][SIZE]) 
-{
-    int i, j, k = 0;
-    int exists[26] = {0};
-    for (i = 0; i<strlen(key); i++) 
-	{
-        if (key[i] == 'j')
-            key[i] = 'i';
-        if (!exists[key[i] - 'A']) 
-		{
-            matrix[k / SIZE][k % SIZE] = key[i];
-            exists[key[i] - 'A'] = 1;
-            k++;
+#include <ctype.h>
+void prepareKey(char key[], char keyMatrix[5][5]) {
+    int i, j, k;
+    char uniqueChars[26] = {0};
+    int keyLength = strlen(key);
+    int row = 0, col = 0;
+    k = 0;
+    for (i = 0; i < keyLength; i++) {
+        if (key[i] == ' ') {
+            continue;
         }
-    }
-    for (i = 0; i < 26; i++) 
-	{
-        if (i != ('J' - 'A') && !exists[i]) 
-		{
-            matrix[k / SIZE][k % SIZE] = 'A' + i;
-            k++;
-        }
-    }
-}
-void encryptPair(char matrix[SIZE][SIZE], char a, char b) 
-{
-    int i, j, r1, c1, r2, c2;
-    for (i = 0; i < SIZE; i++) 
-	{
-        for (j = 0; j < SIZE; j++) 
-		{
-            if (matrix[i][j] == a) 
-			{
-                r1 = i;
-                c1 = j;
-            }
-            if (matrix[i][j] == b) 
-			{
-                r2 = i;
-                c2 = j;
+        char c = toupper(key[i]);
+        if (!uniqueChars[c - 'A']) {
+            uniqueChars[c - 'A'] = 1;
+            keyMatrix[row][col] = c;
+            col++;
+            if (col == 5) {
+                col = 0;
+                row++;
             }
         }
     }
-    if (r1 == r2) 
-	{
-        c1 = (c1 + 1) % SIZE;
-        c2 = (c2 + 1) % SIZE;
-    } 
-	else if (c1 == c2) 
-	{
-        r1 = (r1 + 1) % SIZE;
-        r2 = (r2 + 1) % SIZE;
-    } 
-	else 
-	{
-        int temp = c1;
-        c1 = c2;
-        c2 = temp;
-    }
-	printf("%c%c%c%c", matrix[r1][c1], matrix[r2][c2]);
-}
-void playfairEncrypt(char matrix[SIZE][SIZE], char *input) 
-{
-    int i;
-	for (i = 0; i < strlen(input); i += 2) 
-	{
-        char a = input[i];
-        char b = (i + 1 < strlen(input)) ? input[i + 1] : 'X';
-        encryptPair(matrix, a, b);
-    }
-	printf("\n");
-}
-int main()
-{
-    char key[] = "MONKEY";
-    char plaintext[] = "EDUCATION";
-    char matrix[SIZE][SIZE];
-	prepareKey(key, matrix);
-	printf("Playfair Matrix:\n");
-    for (int i = 0; i < SIZE; i++) 
-	{
-        for (int j = 0; j < SIZE; j++) 
-		{
-            printf("%c ", matrix[i][j]);
+    for (i = 0; i < 26; i++) {
+        if (i != ('J' - 'A') && !uniqueChars[i]) {
+            keyMatrix[row][col] = 'A' + i;
+            col++;
+            if (col == 5) {
+                col = 0;
+                row++;
+            }
         }
-        printf("\n");
     }
-    printf("Plaintext: %s\n", plaintext);
-    printf("Encrypted: ");
-    playfairEncrypt(matrix, plaintext);
-	return 0;
+}
+void findCoordinates(char keyMatrix[5][5], char c, int *row, int *col) {
+    if (c == 'J') {
+        c = 'I'; 
+    }
+    for (*row = 0; *row < 5; (*row)++) {
+        for (*col = 0; *col < 5; (*col)++) {
+            if (keyMatrix[*row][*col] == c) {
+                return;
+            }
+        }
+    }
+}
+void encrypt(char keyMatrix[5][5], char plaintext[], char ciphertext[]) {
+    int i, row1, col1, row2, col2;
+    int len = strlen(plaintext);
+
+    for (i = 0; i < len; i += 2) {
+        char c1 = toupper(plaintext[i]);
+        char c2 = (i + 1 < len) ? toupper(plaintext[i + 1]) : 'X';
+
+        findCoordinates(keyMatrix, c1, &row1, &col1);
+        findCoordinates(keyMatrix, c2, &row2, &col2);
+
+        if (row1 == row2) {
+            ciphertext[i] = keyMatrix[row1][(col1 + 1) % 5];
+            ciphertext[i + 1] = keyMatrix[row2][(col2 + 1) % 5];
+        } else if (col1 == col2) {
+            ciphertext[i] = keyMatrix[(row1 + 1) % 5][col1];
+            ciphertext[i + 1] = keyMatrix[(row2 + 1) % 5][col2];
+        } else {
+            ciphertext[i] = keyMatrix[row1][col2];
+            ciphertext[i + 1] = keyMatrix[row2][col1];
+        }
+    }
+}
+
+int main() {
+    char key[50], plaintext[100], ciphertext[100];
+    char keyMatrix[5][5];
+
+    printf("Enter the key (no spaces, all uppercase): ");
+    scanf("%s", key);
+
+    printf("Enter the plaintext (no spaces, all uppercase): ");
+    scanf("%s", plaintext);
+
+    prepareKey(key, keyMatrix);
+    encrypt(keyMatrix, plaintext, ciphertext);
+
+    printf("Encrypted text: %s\n", ciphertext);
+
+    return 0;
 }
