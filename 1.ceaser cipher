@@ -1,36 +1,30 @@
 #include <stdio.h>
 #include <string.h>
-#include<conio.h>
-#include <ctype.h>
-int main()
-{
-char plain[10], cipher[10];
-int key,i,length;
-int result;
-printf("\n Enter the plain text:");
-scanf("%s", plain);
-printf("\n Enter the key value:");
-scanf("%d", &key);
-printf("\n \n \t PLAIN TEXt: %s",plain);
-printf("\n \n \t ENCRYPTED TEXT: ");
-for(i = 0, length = strlen(plain); i < length; i++)
-{
-cipher[i]=plain[i] + key;
-if (isupper(plain[i]) && (cipher[i] > 'Z'))
-cipher[i] = cipher[i] - 26;
-if (islower(plain[i]) && (cipher[i] > 'z'))
-cipher[i] = cipher[i] - 26;
-printf("%c", cipher[i]);
+void encrypt(char message[], int shift) {
+    int i;
+    for (i = 0; i < strlen(message); i++) {
+        if (message[i] >= 'A' && message[i] <= 'Z') {
+            message[i] = ((message[i] - 'A' + shift) % 26) + 'A';
+        }
+        else if (message[i] >= 'a' && message[i] <= 'z') {
+            message[i] = ((message[i] - 'a' + shift) % 26) + 'a';
+        }
+    }
 }
-printf("\n \n \t AFTER DECRYPTION : ");
-for(i=0;i<length;i++)
-{
-plain[i]=cipher[i]-key;
-if(isupper(cipher[i])&&(plain[i]<'A'))
-plain[i]=plain[i]+26;
-if(islower(cipher[i])&&(plain[i]<'a'))
-plain[i]=plain[i]+26;
-printf("%c",plain[i]);
+void decrypt(char message[], int shift) {
+    encrypt(message, -shift);
 }
-getch();
+int main() {
+    char message[100];
+    int shift;
+    printf("Enter a message: ");
+    fgets(message, sizeof(message), stdin);
+    printf("Enter the shift value: ");
+    scanf("%d", &shift);
+    message[strcspn(message, "\n")] = '\0';
+    encrypt(message, shift);
+    printf("Encrypted message: %s\n", message);
+    decrypt(message, shift);
+    printf("Decrypted message: %s\n", message);
+    return 0;
 }
